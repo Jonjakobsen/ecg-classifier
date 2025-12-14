@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecg-classifier"
+version = "0.1.0"
+description = "ECG classification project with focus on software engineering"
+authors = [
+    { name = "Jon Skaarup Jakobsen", email = "jonskaarupjakobsen@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+
+
+[project.scripts]
+ecg-classifier = "ecg_classifier.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
