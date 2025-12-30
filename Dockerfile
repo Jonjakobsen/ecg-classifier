@@ -12,6 +12,9 @@ COPY pyproject.toml .
 # Kopiér kildekode og artifacts
 COPY src/ src/
 
+# Kopier test data
+COPY tests/ tests/
+
 # Installer pakken (og dependencies)
 RUN pip install --no-cache-dir .
 

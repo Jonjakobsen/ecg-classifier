@@ -15,7 +15,9 @@ requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scikit-learn",
-    "joblib"
+    "joblib",
+    "scipy",
+    "wfdb",
 ]
 
 
