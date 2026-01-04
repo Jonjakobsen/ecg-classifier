@@ -18,6 +18,9 @@ dependencies = [
     "joblib",
     "scipy",
     "wfdb",
+    "torch",
+    
+
 ]
 
 
@@ -32,5 +35,7 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 ecg_classifier = [
-    "artifacts/*.joblib"
+    "artifacts/*",
+    "demo/*",
+    "demo/wfdb/*",
 ]
