@@ -1,22 +1,19 @@
 FROM python:3.11-slim
 
-# Undgå unødvendig cache og pyc-filer
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Kopiér metadata først (bedre caching)
 COPY pyproject.toml .
 
-# Kopiér kildekode og artifacts
+RUN pip install --no-cache-dir \
+    "numpy<2" \
+    torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
 COPY src/ src/
 
-# Kopier test data
-COPY tests/ tests/
-
-# Installer pakken (og dependencies)
 RUN pip install --no-cache-dir .
 
-# CLI bliver entrypoint
 ENTRYPOINT ["ecg-classifier"]
