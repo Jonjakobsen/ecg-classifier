@@ -66,7 +66,7 @@ ecg-classifier/
 │   ├── artifacts/            # Trained model files (.joblib, .pt)
 │   └── demo/                 # Synthetic demo ECG files in csv. and wfdb-format
 ├── scripts/                  # Training scripts and demo data generation
-├── tests/                    # (In progress)
+├── tests/                    # PowerShell-based smoke test verifying CLI functionality.
 ├── data/                     # Path to training data (data not included)
 ├── plots/                    # Model performance, training etc.
 ├── Dockerfile                # Docker image optimized for inference
