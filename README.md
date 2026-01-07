@@ -228,8 +228,6 @@ For the logistic regression model in particular, k-fold cross-validation could b
 - More advanced evaluation
 While this project reports a limited set of core metrics for clarity, additional evaluation tools such as precision–recall curves or ROC AUC could be added in future work to further analyze model behavior, especially in the presence of class imbalance.
 
-- Model abstraction and experiment tracking
-Introducing lightweight experiment tracking (e.g. configuration files, run metadata, artifact versioning) would further strengthen reproducibility and make the system easier to extend with additional model variants.
 
 Overall, these extensions are technically straightforward within the current architecture. The existing codebase is designed to accommodate such improvements without major refactoring, underscoring the project’s emphasis on maintainable and extensible ML system design rather than exhaustive model optimization.
 
