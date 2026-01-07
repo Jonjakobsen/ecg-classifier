@@ -81,7 +81,7 @@ def main():
         demo_root = files("ecg_classifier") / "demo"
 
         if args.format == "wfdb":
-            demo_path = demo_root / "wfdb"  / "20000_lr"
+            demo_path = demo_root / "wfdb"  / "demo_wfdb"
         elif args.format == "csv":
             demo_path = demo_root / "test_ecg_12lead.csv"
         else:
