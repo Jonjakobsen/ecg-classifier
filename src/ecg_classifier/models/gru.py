@@ -33,9 +33,13 @@ class ECGGRU(nn.Module):
         with torch.no_grad():
             prob = self(x).item()
 
+        cls = int(prob >= 0.5)
+        
+        confidence = prob if cls == 1 else 1 - prob
+
         return {
-            "class": int(prob >= 0.5),
-            "confidence": float(prob),
+            "class": cls,
+            "confidence": float(confidence),
             "prob_not_normal": float(prob),
         }
 
