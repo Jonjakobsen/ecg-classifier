@@ -90,54 +90,135 @@ This installs the package in editable mode for development and testing.
 
 ---
 
-## Running Inference
+## Usage
 
-### CLI
+## CLI Usage
+
+The package exposes a command-line interface for running ECG classification either on user-provided data or on bundled demo data. The same interface is available both locally and when running inside Docker.
+
+---
+
+### Demo (recommended first run)
+
+Run inference on synthetic ECG signals bundled with the package.  
+This is the fastest way to verify that the full system works end-to-end.
+
+#### Local execution
 
 ```bash
-ecg-classifier infer \
-  --input path/to/ecgfile \
-  --format csv \
-  --model_type logreg
+ecg-classifier demo
 ```
 
-Options:
+Optional arguments:
 
-- `--input`: Path to ECG file
-- `--format`: `csv` or `wfdb` (default: `wfdb`)
-- `--model_type`: `logreg` or `gru` (default: `logreg`)
+- `--format`: `wfdb` or `csv` (default: `wfdb`)
+- `--model`: `logreg` or `gru` (default: `logreg`)
 
-Output:
+Example:
 
+```bash
+ecg-classifier demo --format csv --model gru
 ```
+
+The demo uses **synthetic, randomly generated ECG signals** and exists solely to validate the CLI, model loading, and inference pipeline.
+
+#### Docker execution
+
+First, build the Docker image:
+
+```bash
+docker build -t ecg-classifier .
+```
+
+Run the demo inside Docker:
+
+```bash
+docker run --rm ecg-classifier demo
+```
+
+Example with explicit options:
+
+```bash
+docker run --rm ecg-classifier demo --format csv --model gru
+```
+
+Because the demo data is bundled inside the package, **no volume mounting is required** when running the demo in Docker.
+
+---
+
+### Inference on user-provided data
+
+Run inference on ECG files supplied by the user.
+
+#### Local execution
+
+```bash
+ecg-classifier run   --input path/to/ecgfile   --format csv   --model logreg
+```
+
+Arguments:
+
+- `--input`: Path to an ECG file or directory
+- `--format`: `wfdb` or `csv` (default: `wfdb`)
+- `--model`: `logreg` or `gru` (default: `logreg`)
+
+#### Docker execution
+
+When running inference on user-provided data in Docker, the input data must be mounted into the container.
+
+Example:
+
+```bash
+docker run --rm   -v /path/to/local/data:/data   ecg-classifier run   --input /data/test_ecg_12lead.csv   --format csv   --model logreg
+```
+
+In this example:
+
+- `/path/to/local/data` is a directory on the host machine containing ECG files
+- `/data` is the corresponding directory inside the container
+- The `--input` path must refer to the container path, not the host path
+
+---
+
+### Output format
+
+```text
 ECG classification result
 -------------------------
 Label      : NORMAL
 Confidence : 0.87
 ```
 
+The confidence corresponds to the predicted class probability returned by the selected model.
+
 ---
 
-## Docker Usage
+## Note on Out-of-Distribution (OOD) Behavior
 
-Build the inference image:
+When running the demo using the logistic regression model, it can be observed that the model may confidently classify certain **synthetic or non-ECG-like signals** as **NORMAL**, even when the input clearly does not resemble a physiological ECG waveform.
 
-```bash
-docker build -t ecg-classifier .
-```
+This behavior is **expected** and represents a classical example of the **out-of-distribution (OOD) problem** in machine learning.
 
-Run inference:
+The logistic regression model is a *discriminative classifier* trained exclusively on in-distribution ECG data (i.e. real ECG recordings labeled as normal or abnormal). As a result, it is only capable of answering the question:
 
-```bash
-docker run --rm \
-  -v $path/do/user/data:/data \
-  ecg-classifier infer \
-  --input /data/test_ecg_12lead.csv \
-  --format csv \
-  --model_type gru
-```
+> “Does this input look more like NORMAL or NOT NORMAL ECG data, given the training distribution?”
 
-The Docker image is optimized for **inference only** and includes only the dependencies required to load and run the trained models.
+It is **not designed to determine whether an input signal is an ECG at all**. When presented with arbitrary signals (e.g. noise or unrealistic synthetic data), the model is forced to extrapolate and will often assign a high-confidence prediction to one of the known classes.
+
+This highlights an important system-level consideration for production machine learning systems:  
+**robust input validation and OOD handling must be addressed explicitly and cannot be delegated to the classifier alone.**
+
+### Potential mitigation strategies
+
+Possible approaches to mitigate this issue include:
+
+- **Signal sanity checks prior to inference**, such as amplitude range checks, RMS thresholds, dominant frequency analysis, or flatline detection.
+- **Explicit OOD detection**, for example using a reconstruction-based model (e.g. an autoencoder) trained to model the ECG signal manifold and reject inputs with high reconstruction error.
+- **Pipeline-level rejection**, where inputs failing validation are labeled as `INVALID` rather than being forced into a clinical classification.
+
+In this project, the observed behavior is intentionally documented to illustrate a well-known limitation of discriminative models and to emphasize the importance of system design considerations beyond model accuracy.
+
+
 
 ---
 
