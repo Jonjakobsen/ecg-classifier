@@ -56,6 +56,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="Model to use (default: logreg)",
     )
 
+    # ---------- api ----------
+    api_parser = subparsers.add_parser(
+        "api",
+        help="Start the ECG Classifier HTTP API",
+    )
+    api_parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="Host address (default: 0.0.0.0)",
+    )
+    api_parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port number (default: 8000)",
+    )
+
     return parser
 
 
@@ -76,6 +93,7 @@ def main():
             fmt=args.format,
             model_type=args.model,
         )
+        print(result)
 
     elif args.command == "demo":
         demo_root = files("ecg_classifier") / "demo"
@@ -92,12 +110,21 @@ def main():
             fmt=args.format,
             model_type=args.model,
         )
+        print_result(result)
 
-    else:
-        parser.print_help()
-        return
+    elif args.command == "api":
+        import uvicorn
 
-    print_result(result)
+        uvicorn.run(
+            "ecg_classifier.api:app",
+            host=args.host,
+            port=args.port,
+        )
+
+    
+    
+
+
 
 
 if __name__ == "__main__":
