@@ -1,6 +1,16 @@
 # ECG Abnormality Classification
 
-End-to-end machine learning system for binary ECG abnormality classification, combining classical machine learning and deep learning approaches. The project is implemented as a production-ready Python package with a command-line interface (CLI) and Docker support, enabling reproducible inference on single ECG files.
+End-to-end machine learning system for binary ECG abnormality
+classification, combining classical machine learning and deep learning
+approaches. The project is implemented as a production-ready Python
+package exposing **three complementary interfaces**:
+
+-   Command-line interface (CLI)
+-   HTTP-based Web API
+-   Dockerized deployment
+
+All interfaces share the same inference codepath, ensuring consistent
+and reproducible behavior across execution environments.
 
 ---
 
@@ -61,6 +71,7 @@ ecg-classifier/
 ├── src/ecg_classifier/       # Python package
 │   ├── cli.py                # CLI entry point
 │   ├── inference.py          # Inference logic
+│   ├── api.py                # RESTful Web API using FastAPI
 │   ├── models/               # Model definitions (LogReg, GRU)
 │   ├── io/                   # ECG loading (CSV, WFDB)
 │   ├── artifacts/            # Trained model files (.joblib, .pt)
@@ -169,7 +180,7 @@ When running inference on user-provided data in Docker, the input data must be m
 Example:
 
 ```bash
-docker run --rm   -v /path/to/local/data:/data   ecg-classifier run   --input /data/test_ecg_12lead.csv   --format csv   --model logreg
+docker run --rm   -v /path/to/local/data:/data   ecg-classifier run   --input /data/ecg.csv   --format csv   --model logreg
 ```
 
 In this example:
@@ -177,6 +188,76 @@ In this example:
 - `/path/to/local/data` is a directory on the host machine containing ECG files
 - `/data` is the corresponding directory inside the container
 - The `--input` path must refer to the container path, not the host path
+
+---
+
+## HTTP API (FastAPI)
+
+In addition to the CLI, the project exposes a lightweight **HTTP API** implemented using **FastAPI** and served with **Uvicorn**.  
+The API provides the same inference functionality as the CLI and Docker interfaces and is intended for integration with web applications or other services.
+
+The API is deliberately thin and delegates all logic to the shared inference pipeline, ensuring consistent behavior across all interfaces.
+
+---
+
+### Starting the API
+
+#### Local
+
+```bash
+ecg-classifier api
+```
+
+#### Docker
+
+```bash
+docker run --rm -p 8000:8000 ecg-classifier api
+```
+
+The API will be available at:
+
+```
+http://localhost:8000
+```
+
+---
+
+### Interactive documentation
+
+FastAPI automatically provides Swagger documentation:
+
+```
+http://localhost:8000/docs
+```
+
+This interface can be used to upload ECG data, select model type, and run inference directly from the browser.
+
+---
+
+### Endpoints
+
+- `GET /health`  
+  Health check endpoint.
+
+  - `GET /demo`  
+  Run demo on bundled data.
+
+- `POST /predict`  
+  Run ECG classification.
+
+Supported input modes:
+- **CSV**: upload a single `.csv` file
+- **WFDB**: upload both .hea and .dat WFDB files for a single record
+
+The API does **not** assume access to the client’s filesystem. All data is explicitly uploaded and processed server-side.
+
+---
+
+### Design note
+
+The CLI, HTTP API, and Docker image are three interfaces to the same inference core.  
+This mirrors real-world ML deployment patterns and avoids duplicated logic.
+
 
 ---
 
