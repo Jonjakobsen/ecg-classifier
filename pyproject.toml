@@ -19,6 +19,9 @@ dependencies = [
     "scipy",
     "wfdb",
     "torch",
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
     
 
 ]
