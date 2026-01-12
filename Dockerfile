@@ -17,3 +17,5 @@ COPY src/ src/
 RUN pip install --no-cache-dir .
 
 ENTRYPOINT ["ecg-classifier"]
+
+CMD ["--help"]
