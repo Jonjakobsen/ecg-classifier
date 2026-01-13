@@ -7,7 +7,7 @@ package exposing **three complementary interfaces**:
 
 -   Command-line interface (CLI)
 -   HTTP-based Web API
--   Dockerized deployment
+-   Dockerized deployment (API-first)
 
 All interfaces share the same inference codepath, ensuring consistent
 and reproducible behavior across execution environments.
@@ -21,7 +21,7 @@ The goal of this project is to classify ECG recordings as **NORMAL** or **NOT NO
 - **Logistic Regression** using handcrafted time–frequency features
 - **GRU (Gated Recurrent Unit)** neural network operating on raw or minimally processed ECG signals
 
-The project emphasizes not only model performance, but also **clean software architecture**, **reproducibility**, and **deployment-readiness**.
+The task is deliberately simplified to prioritize **system design**, **reproducibility**, and **deployment-readiness** over model optimization or state-of-the-art performance. The project emphasizes clean software architecture and **production-oriented machine learning practices**.
 
 ---
 
@@ -97,22 +97,23 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
-This installs the package in editable mode for development and testing.
+This installs the package in editable mode for local development and testing.
 
 ---
 
 ## Usage
 
-## CLI Usage
+## Command-Line Interface (CLI)
 
-The package exposes a command-line interface for running ECG classification either on user-provided data or on bundled demo data. The same interface is available both locally and when running inside Docker.
+The project provides a command-line interface for running ECG classification on either user-supplied data or bundled demo data.  
+The CLI is the primary interface and is fully supported both locally and when executed inside Docker.
 
 ---
 
 ### Demo (recommended first run)
 
 Run inference on synthetic ECG signals bundled with the package.  
-This is the fastest way to verify that the full system works end-to-end.
+This is the quickest way to verify that model loading, preprocessing, and inference work end-to-end.
 
 #### Local execution
 
@@ -131,11 +132,12 @@ Example:
 ecg-classifier demo --format csv --model gru
 ```
 
-The demo uses **synthetic, randomly generated ECG signals** and exists solely to validate the CLI, model loading, and inference pipeline.
+The demo uses **synthetic ECG data** generated solely for testing and demonstration purposes.  
+It is not physiologically realistic and must not be used for evaluation or clinical interpretation.
 
 #### Docker execution
 
-First, build the Docker image:
+Build the Docker image:
 
 ```bash
 docker build -t ecg-classifier .
@@ -144,27 +146,30 @@ docker build -t ecg-classifier .
 Run the demo inside Docker:
 
 ```bash
-docker run --rm ecg-classifier demo
+docker run --rm ecg-classifier ecg-classifier demo
 ```
 
 Example with explicit options:
 
 ```bash
-docker run --rm ecg-classifier demo --format csv --model gru
+docker run --rm ecg-classifier ecg-classifier demo --format csv --model gru
 ```
 
-Because the demo data is bundled inside the package, **no volume mounting is required** when running the demo in Docker.
+Because the demo data is bundled inside the package, **no volume mounting is required**.
 
 ---
 
 ### Inference on user-provided data
 
-Run inference on ECG files supplied by the user.
+Run inference on ECG data supplied by the user.
 
 #### Local execution
 
 ```bash
-ecg-classifier run   --input path/to/ecgfile   --format csv   --model logreg
+ecg-classifier run \
+  --input path/to/ecgfile \
+  --format csv \
+  --model logreg
 ```
 
 Arguments:
@@ -175,28 +180,33 @@ Arguments:
 
 #### Docker execution
 
-When running inference on user-provided data in Docker, the input data must be mounted into the container.
+When running inference inside Docker, input data must be mounted into the container.
 
 Example:
 
 ```bash
-docker run --rm   -v /path/to/local/data:/data   ecg-classifier run   --input /data/ecg.csv   --format csv   --model logreg
+docker run --rm \
+  -v /path/to/local/data:/data \
+  ecg-classifier ecg-classifier run \
+  --input /data/ecg.csv \
+  --format csv \
+  --model logreg
 ```
 
-In this example:
+Notes:
 
-- `/path/to/local/data` is a directory on the host machine containing ECG files
+- `/path/to/local/data` refers to a directory on the host machine
 - `/data` is the corresponding directory inside the container
-- The `--input` path must refer to the container path, not the host path
+- The `--input` argument must always reference the container path
 
 ---
 
 ## HTTP API (FastAPI)
 
-In addition to the CLI, the project exposes a lightweight **HTTP API** implemented using **FastAPI** and served with **Uvicorn**.  
-The API provides the same inference functionality as the CLI and Docker interfaces and is intended for integration with web applications or other services.
+The project also exposes a lightweight HTTP API implemented using **FastAPI** and served via **Uvicorn**.  
+The API provides the same inference functionality as the CLI and is intended for programmatic access or service integration.
 
-The API is deliberately thin and delegates all logic to the shared inference pipeline, ensuring consistent behavior across all interfaces.
+The API layer is intentionally thin and delegates all logic to the shared inference module to ensure identical behavior across interfaces.
 
 ---
 
@@ -205,13 +215,13 @@ The API is deliberately thin and delegates all logic to the shared inference pip
 #### Local
 
 ```bash
-ecg-classifier api
+uvicorn ecg_classifier.api:app --host 0.0.0.0 --port 8000
 ```
 
 #### Docker
 
 ```bash
-docker run --rm -p 8000:8000 ecg-classifier api
+docker run --rm -p 8000:8000 ecg-classifier
 ```
 
 The API will be available at:
@@ -224,13 +234,13 @@ http://localhost:8000
 
 ### Interactive documentation
 
-FastAPI automatically provides Swagger documentation:
+FastAPI automatically generates interactive Swagger documentation:
 
 ```
 http://localhost:8000/docs
 ```
 
-This interface can be used to upload ECG data, select model type, and run inference directly from the browser.
+This interface allows uploading ECG data, selecting model type, and running inference directly from the browser.
 
 ---
 
@@ -239,24 +249,26 @@ This interface can be used to upload ECG data, select model type, and run infere
 - `GET /health`  
   Health check endpoint.
 
-  - `GET /demo`  
-  Run demo on bundled data.
+- `GET /demo`  
+  Run inference on bundled demo data.
 
 - `POST /predict`  
-  Run ECG classification.
+  Run ECG classification on uploaded data.
 
 Supported input modes:
-- **CSV**: upload a single `.csv` file
-- **WFDB**: upload both .hea and .dat WFDB files for a single record
 
-The API does **not** assume access to the client’s filesystem. All data is explicitly uploaded and processed server-side.
+- **CSV**: upload a single `.csv` file
+- **WFDB**: upload both `.hea` and `.dat` files for a single record
+
+All data is uploaded explicitly; the API does not assume access to the client filesystem.
 
 ---
 
 ### Design note
 
 The CLI, HTTP API, and Docker image are three interfaces to the same inference core.  
-This mirrors real-world ML deployment patterns and avoids duplicated logic.
+This structure mirrors common production ML deployment patterns and avoids duplicated logic.
+
 
 
 ---
