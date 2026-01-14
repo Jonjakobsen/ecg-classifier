@@ -23,8 +23,10 @@ dependencies = [
     "uvicorn",
     "python-multipart",
     
-
 ]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
 
 
 [project.scripts]
