@@ -14,6 +14,19 @@ and reproducible behavior across execution environments.
 
 ---
 
+## Key Features
+
+- End-to-end ML pipeline: data loading → preprocessing → training → evaluation → inference
+- Multiple model backends (logistic regression and GRU)
+- Model artifacts bundled with the package
+- Command-line interface for inference
+- Docker image for reproducible, environment-independent execution
+- FastAPI web API served with Uvicorn
+- Clear separation between training code and inference package
+- Automated, parameterized tests (inference + API) using pytest
+
+---
+
 ## Project Overview
 
 The goal of this project is to classify ECG recordings as **NORMAL** or **NOT NORMAL**. Two complementary model types are supported:
@@ -36,7 +49,7 @@ For this project:
   - `1 = NOT NORMAL`
 - Original multi-label diagnostic annotations are mapped to this binary target
 
-The dataset is slighty imbalanced with approximately 57% of the samples labeled as "NOT NORMAL".
+The dataset is slightly imbalanced with approximately 57% of the samples labeled as "NOT NORMAL".
 
 ---
 
@@ -53,17 +66,6 @@ They should **not** be interpreted as physiologically realistic ECGs and are **n
 
 ---
 
-## Key Features
-
-- End-to-end ML pipeline: data loading → preprocessing → training → evaluation → inference
-- Multiple model backends (logistic regression and GRU)
-- Model artifacts bundled with the package
-- Command-line interface for inference
-- Docker image for reproducible, environment-independent execution
-- Clear separation between training code and inference package
-
----
-
 ## Repository Structure
 
 ```
@@ -75,9 +77,9 @@ ecg-classifier/
 │   ├── models/               # Model definitions (LogReg, GRU)
 │   ├── io/                   # ECG loading (CSV, WFDB)
 │   ├── artifacts/            # Trained model files (.joblib, .pt)
-│   └── demo/                 # Synthetic demo ECG files in csv. and wfdb-format
+│   └── demo/                 # Synthetic demo ECG files in CSV and WFDB format
 ├── scripts/                  # Training scripts and demo data generation
-├── tests/                    # PowerShell-based smoke test verifying CLI functionality.
+├── tests/                    # Automated tests for inference and api
 ├── data/                     # Path to training data (data not included)
 ├── plots/                    # Model performance, training etc.
 ├── Dockerfile                # Docker image optimized for inference
@@ -269,7 +271,14 @@ All data is uploaded explicitly; the API does not assume access to the client fi
 The CLI, HTTP API, and Docker image are three interfaces to the same inference core.  
 This structure mirrors common production ML deployment patterns and avoids duplicated logic.
 
+---
 
+## Testing
+
+The project uses pytest with parameterized integration tests to validate the full inference pipeline and API.
+Inference tests cover all combinations of input format (csv, wfdb) and model type (logreg, gru) using real model artifacts and demo data.
+API tests exercise the FastAPI endpoints end-to-end via TestClient, including file uploads and response contracts.
+The tests prioritize interface stability and system correctness over exact numerical predictions.
 
 ---
 
@@ -373,6 +382,7 @@ Loss curves are primarily used as a **diagnostic tool** to assess convergence be
 - Clear separation of concerns (training vs inference)
 - Deterministic, reproducible inference
 - Minimal, explicit dependencies
+- Automated testing
 
 
 ---
@@ -380,7 +390,7 @@ Loss curves are primarily used as a **diagnostic tool** to assess convergence be
 
 ## Skills Demonstrated
 
-System design for ML applications, data preprocessing and feature engineering, classical ML and deep learning, ML tooling, packaging, containerization in Docker, and production-oriented deployment practices.
+System design for ML applications, data preprocessing and feature engineering, classical ML and deep learning, ML tooling, packaging, containerization in Docker, API, automated testing, and production-oriented deployment practices.
 
 ---
 
